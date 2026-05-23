@@ -25,6 +25,7 @@ const (
 	SecretsService_CreateSecretStream_FullMethodName = "/api.SecretsService/CreateSecretStream"
 	SecretsService_GetSecret_FullMethodName          = "/api.SecretsService/GetSecret"
 	SecretsService_GetSecretStream_FullMethodName    = "/api.SecretsService/GetSecretStream"
+	SecretsService_UpdateSecret_FullMethodName       = "/api.SecretsService/UpdateSecret"
 	SecretsService_DeleteSecret_FullMethodName       = "/api.SecretsService/DeleteSecret"
 )
 
@@ -44,6 +45,8 @@ type SecretsServiceClient interface {
 	GetSecret(ctx context.Context, in *GetSecretRequest, opts ...grpc.CallOption) (*GetSecretResponse, error)
 	// GetSecretStream returns a stream of chunks for a secret by its ID.
 	GetSecretStream(ctx context.Context, in *GetSecretRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetSecretChunkResponse], error)
+	// UpdateSecret updates a secret with optimistic locking.
+	UpdateSecret(ctx context.Context, in *UpdateSecretRequest, opts ...grpc.CallOption) (*UpdateSecretResponse, error)
 	// DeleteSecret deletes a secret by its ID.
 	DeleteSecret(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*DeleteSecretResponse, error)
 }
@@ -118,6 +121,16 @@ func (c *secretsServiceClient) GetSecretStream(ctx context.Context, in *GetSecre
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SecretsService_GetSecretStreamClient = grpc.ServerStreamingClient[GetSecretChunkResponse]
 
+func (c *secretsServiceClient) UpdateSecret(ctx context.Context, in *UpdateSecretRequest, opts ...grpc.CallOption) (*UpdateSecretResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateSecretResponse)
+	err := c.cc.Invoke(ctx, SecretsService_UpdateSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *secretsServiceClient) DeleteSecret(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*DeleteSecretResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteSecretResponse)
@@ -144,6 +157,8 @@ type SecretsServiceServer interface {
 	GetSecret(context.Context, *GetSecretRequest) (*GetSecretResponse, error)
 	// GetSecretStream returns a stream of chunks for a secret by its ID.
 	GetSecretStream(*GetSecretRequest, grpc.ServerStreamingServer[GetSecretChunkResponse]) error
+	// UpdateSecret updates a secret with optimistic locking.
+	UpdateSecret(context.Context, *UpdateSecretRequest) (*UpdateSecretResponse, error)
 	// DeleteSecret deletes a secret by its ID.
 	DeleteSecret(context.Context, *DeleteSecretRequest) (*DeleteSecretResponse, error)
 }
@@ -169,6 +184,9 @@ func (UnimplementedSecretsServiceServer) GetSecret(context.Context, *GetSecretRe
 }
 func (UnimplementedSecretsServiceServer) GetSecretStream(*GetSecretRequest, grpc.ServerStreamingServer[GetSecretChunkResponse]) error {
 	return status.Error(codes.Unimplemented, "method GetSecretStream not implemented")
+}
+func (UnimplementedSecretsServiceServer) UpdateSecret(context.Context, *UpdateSecretRequest) (*UpdateSecretResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateSecret not implemented")
 }
 func (UnimplementedSecretsServiceServer) DeleteSecret(context.Context, *DeleteSecretRequest) (*DeleteSecretResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteSecret not implemented")
@@ -265,6 +283,24 @@ func _SecretsService_GetSecretStream_Handler(srv interface{}, stream grpc.Server
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SecretsService_GetSecretStreamServer = grpc.ServerStreamingServer[GetSecretChunkResponse]
 
+func _SecretsService_UpdateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretsServiceServer).UpdateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretsService_UpdateSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretsServiceServer).UpdateSecret(ctx, req.(*UpdateSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SecretsService_DeleteSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteSecretRequest)
 	if err := dec(in); err != nil {
@@ -301,6 +337,10 @@ var SecretsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSecret",
 			Handler:    _SecretsService_GetSecret_Handler,
+		},
+		{
+			MethodName: "UpdateSecret",
+			Handler:    _SecretsService_UpdateSecret_Handler,
 		},
 		{
 			MethodName: "DeleteSecret",

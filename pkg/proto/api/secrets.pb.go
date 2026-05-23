@@ -432,6 +432,98 @@ func (x *GetSecretChunkResponse) GetChunk() []byte {
 	return nil
 }
 
+// UpdateSecretRequest is the request for the UpdateSecret RPC.
+type UpdateSecretRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// secret with updated fields and current version for optimistic locking.
+	Secret        *Secret `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSecretRequest) Reset() {
+	*x = UpdateSecretRequest{}
+	mi := &file_api_secrets_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSecretRequest) ProtoMessage() {}
+
+func (x *UpdateSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_secrets_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSecretRequest.ProtoReflect.Descriptor instead.
+func (*UpdateSecretRequest) Descriptor() ([]byte, []int) {
+	return file_api_secrets_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpdateSecretRequest) GetSecret() *Secret {
+	if x != nil {
+		return x.Secret
+	}
+	return nil
+}
+
+// UpdateSecretResponse is the response for the UpdateSecret RPC.
+type UpdateSecretResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// new_version is the incremented version after update.
+	NewVersion    int64 `protobuf:"varint,1,opt,name=new_version,json=newVersion,proto3" json:"new_version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSecretResponse) Reset() {
+	*x = UpdateSecretResponse{}
+	mi := &file_api_secrets_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSecretResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSecretResponse) ProtoMessage() {}
+
+func (x *UpdateSecretResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_secrets_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSecretResponse.ProtoReflect.Descriptor instead.
+func (*UpdateSecretResponse) Descriptor() ([]byte, []int) {
+	return file_api_secrets_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateSecretResponse) GetNewVersion() int64 {
+	if x != nil {
+		return x.NewVersion
+	}
+	return 0
+}
+
 // DeleteSecretRequest is the request for the DeleteSecret RPC.
 type DeleteSecretRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -443,7 +535,7 @@ type DeleteSecretRequest struct {
 
 func (x *DeleteSecretRequest) Reset() {
 	*x = DeleteSecretRequest{}
-	mi := &file_api_secrets_proto_msgTypes[7]
+	mi := &file_api_secrets_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -455,7 +547,7 @@ func (x *DeleteSecretRequest) String() string {
 func (*DeleteSecretRequest) ProtoMessage() {}
 
 func (x *DeleteSecretRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_secrets_proto_msgTypes[7]
+	mi := &file_api_secrets_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -468,7 +560,7 @@ func (x *DeleteSecretRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSecretRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSecretRequest) Descriptor() ([]byte, []int) {
-	return file_api_secrets_proto_rawDescGZIP(), []int{7}
+	return file_api_secrets_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteSecretRequest) GetSecretId() string {
@@ -489,7 +581,7 @@ type DeleteSecretResponse struct {
 
 func (x *DeleteSecretResponse) Reset() {
 	*x = DeleteSecretResponse{}
-	mi := &file_api_secrets_proto_msgTypes[8]
+	mi := &file_api_secrets_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -501,7 +593,7 @@ func (x *DeleteSecretResponse) String() string {
 func (*DeleteSecretResponse) ProtoMessage() {}
 
 func (x *DeleteSecretResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_secrets_proto_msgTypes[8]
+	mi := &file_api_secrets_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -514,7 +606,7 @@ func (x *DeleteSecretResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSecretResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSecretResponse) Descriptor() ([]byte, []int) {
-	return file_api_secrets_proto_rawDescGZIP(), []int{8}
+	return file_api_secrets_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteSecretResponse) GetStatus() string {
@@ -549,7 +641,7 @@ type Secret struct {
 
 func (x *Secret) Reset() {
 	*x = Secret{}
-	mi := &file_api_secrets_proto_msgTypes[9]
+	mi := &file_api_secrets_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -561,7 +653,7 @@ func (x *Secret) String() string {
 func (*Secret) ProtoMessage() {}
 
 func (x *Secret) ProtoReflect() protoreflect.Message {
-	mi := &file_api_secrets_proto_msgTypes[9]
+	mi := &file_api_secrets_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -574,7 +666,7 @@ func (x *Secret) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Secret.ProtoReflect.Descriptor instead.
 func (*Secret) Descriptor() ([]byte, []int) {
-	return file_api_secrets_proto_rawDescGZIP(), []int{9}
+	return file_api_secrets_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Secret) GetId() string {
@@ -653,7 +745,12 @@ const file_api_secrets_proto_rawDesc = "" +
 	"\x06secret\x18\x01 \x01(\v2\v.api.SecretR\x06secret\"O\n" +
 	"\x16GetSecretChunkResponse\x12\x1f\n" +
 	"\x04meta\x18\x01 \x01(\v2\v.api.SecretR\x04meta\x12\x14\n" +
-	"\x05chunk\x18\x02 \x01(\fR\x05chunk\"2\n" +
+	"\x05chunk\x18\x02 \x01(\fR\x05chunk\":\n" +
+	"\x13UpdateSecretRequest\x12#\n" +
+	"\x06secret\x18\x01 \x01(\v2\v.api.SecretR\x06secret\"7\n" +
+	"\x14UpdateSecretResponse\x12\x1f\n" +
+	"\vnew_version\x18\x01 \x01(\x03R\n" +
+	"newVersion\"2\n" +
 	"\x13DeleteSecretRequest\x12\x1b\n" +
 	"\tsecret_id\x18\x01 \x01(\tR\bsecretId\".\n" +
 	"\x14DeleteSecretResponse\x12\x16\n" +
@@ -677,13 +774,14 @@ const file_api_secrets_proto_rawDesc = "" +
 	"\bBANKCARD\x10\x03\x12\b\n" +
 	"\x04TEXT\x10\x04\x12\n" +
 	"\n" +
-	"\x06BINARY\x10\x052\xb1\x03\n" +
+	"\x06BINARY\x10\x052\xf6\x03\n" +
 	"\x0eSecretsService\x12>\n" +
 	"\vListSecrets\x12\x16.google.protobuf.Empty\x1a\x17.api.ListSecretResponse\x12C\n" +
 	"\fCreateSecret\x12\x18.api.CreateSecretRequest\x1a\x19.api.CreateSecretResponse\x12P\n" +
 	"\x12CreateSecretStream\x12\x1d.api.CreateSecretChunkRequest\x1a\x19.api.CreateSecretResponse(\x01\x12:\n" +
 	"\tGetSecret\x12\x15.api.GetSecretRequest\x1a\x16.api.GetSecretResponse\x12G\n" +
 	"\x0fGetSecretStream\x12\x15.api.GetSecretRequest\x1a\x1b.api.GetSecretChunkResponse0\x01\x12C\n" +
+	"\fUpdateSecret\x12\x18.api.UpdateSecretRequest\x1a\x19.api.UpdateSecretResponse\x12C\n" +
 	"\fDeleteSecret\x12\x18.api.DeleteSecretRequest\x1a\x19.api.DeleteSecretResponseB+Z)github.com/anon-d/gophKeeper/pkg/proto;pbb\x06proto3"
 
 var (
@@ -699,7 +797,7 @@ func file_api_secrets_proto_rawDescGZIP() []byte {
 }
 
 var file_api_secrets_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_api_secrets_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_api_secrets_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_api_secrets_proto_goTypes = []any{
 	(SecretType)(0),                  // 0: api.SecretType
 	(*ListSecretResponse)(nil),       // 1: api.ListSecretResponse
@@ -709,38 +807,43 @@ var file_api_secrets_proto_goTypes = []any{
 	(*GetSecretRequest)(nil),         // 5: api.GetSecretRequest
 	(*GetSecretResponse)(nil),        // 6: api.GetSecretResponse
 	(*GetSecretChunkResponse)(nil),   // 7: api.GetSecretChunkResponse
-	(*DeleteSecretRequest)(nil),      // 8: api.DeleteSecretRequest
-	(*DeleteSecretResponse)(nil),     // 9: api.DeleteSecretResponse
-	(*Secret)(nil),                   // 10: api.Secret
-	(*timestamppb.Timestamp)(nil),    // 11: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),            // 12: google.protobuf.Empty
+	(*UpdateSecretRequest)(nil),      // 8: api.UpdateSecretRequest
+	(*UpdateSecretResponse)(nil),     // 9: api.UpdateSecretResponse
+	(*DeleteSecretRequest)(nil),      // 10: api.DeleteSecretRequest
+	(*DeleteSecretResponse)(nil),     // 11: api.DeleteSecretResponse
+	(*Secret)(nil),                   // 12: api.Secret
+	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),            // 14: google.protobuf.Empty
 }
 var file_api_secrets_proto_depIdxs = []int32{
-	10, // 0: api.ListSecretResponse.secrets:type_name -> api.Secret
-	10, // 1: api.CreateSecretRequest.secret:type_name -> api.Secret
-	10, // 2: api.CreateSecretChunkRequest.meta:type_name -> api.Secret
-	10, // 3: api.GetSecretResponse.secret:type_name -> api.Secret
-	10, // 4: api.GetSecretChunkResponse.meta:type_name -> api.Secret
-	0,  // 5: api.Secret.type:type_name -> api.SecretType
-	11, // 6: api.Secret.created_at:type_name -> google.protobuf.Timestamp
-	11, // 7: api.Secret.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 8: api.SecretsService.ListSecrets:input_type -> google.protobuf.Empty
-	2,  // 9: api.SecretsService.CreateSecret:input_type -> api.CreateSecretRequest
-	3,  // 10: api.SecretsService.CreateSecretStream:input_type -> api.CreateSecretChunkRequest
-	5,  // 11: api.SecretsService.GetSecret:input_type -> api.GetSecretRequest
-	5,  // 12: api.SecretsService.GetSecretStream:input_type -> api.GetSecretRequest
-	8,  // 13: api.SecretsService.DeleteSecret:input_type -> api.DeleteSecretRequest
-	1,  // 14: api.SecretsService.ListSecrets:output_type -> api.ListSecretResponse
-	4,  // 15: api.SecretsService.CreateSecret:output_type -> api.CreateSecretResponse
-	4,  // 16: api.SecretsService.CreateSecretStream:output_type -> api.CreateSecretResponse
-	6,  // 17: api.SecretsService.GetSecret:output_type -> api.GetSecretResponse
-	7,  // 18: api.SecretsService.GetSecretStream:output_type -> api.GetSecretChunkResponse
-	9,  // 19: api.SecretsService.DeleteSecret:output_type -> api.DeleteSecretResponse
-	14, // [14:20] is the sub-list for method output_type
-	8,  // [8:14] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	12, // 0: api.ListSecretResponse.secrets:type_name -> api.Secret
+	12, // 1: api.CreateSecretRequest.secret:type_name -> api.Secret
+	12, // 2: api.CreateSecretChunkRequest.meta:type_name -> api.Secret
+	12, // 3: api.GetSecretResponse.secret:type_name -> api.Secret
+	12, // 4: api.GetSecretChunkResponse.meta:type_name -> api.Secret
+	12, // 5: api.UpdateSecretRequest.secret:type_name -> api.Secret
+	0,  // 6: api.Secret.type:type_name -> api.SecretType
+	13, // 7: api.Secret.created_at:type_name -> google.protobuf.Timestamp
+	13, // 8: api.Secret.updated_at:type_name -> google.protobuf.Timestamp
+	14, // 9: api.SecretsService.ListSecrets:input_type -> google.protobuf.Empty
+	2,  // 10: api.SecretsService.CreateSecret:input_type -> api.CreateSecretRequest
+	3,  // 11: api.SecretsService.CreateSecretStream:input_type -> api.CreateSecretChunkRequest
+	5,  // 12: api.SecretsService.GetSecret:input_type -> api.GetSecretRequest
+	5,  // 13: api.SecretsService.GetSecretStream:input_type -> api.GetSecretRequest
+	8,  // 14: api.SecretsService.UpdateSecret:input_type -> api.UpdateSecretRequest
+	10, // 15: api.SecretsService.DeleteSecret:input_type -> api.DeleteSecretRequest
+	1,  // 16: api.SecretsService.ListSecrets:output_type -> api.ListSecretResponse
+	4,  // 17: api.SecretsService.CreateSecret:output_type -> api.CreateSecretResponse
+	4,  // 18: api.SecretsService.CreateSecretStream:output_type -> api.CreateSecretResponse
+	6,  // 19: api.SecretsService.GetSecret:output_type -> api.GetSecretResponse
+	7,  // 20: api.SecretsService.GetSecretStream:output_type -> api.GetSecretChunkResponse
+	9,  // 21: api.SecretsService.UpdateSecret:output_type -> api.UpdateSecretResponse
+	11, // 22: api.SecretsService.DeleteSecret:output_type -> api.DeleteSecretResponse
+	16, // [16:23] is the sub-list for method output_type
+	9,  // [9:16] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_api_secrets_proto_init() }
@@ -754,7 +857,7 @@ func file_api_secrets_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_secrets_proto_rawDesc), len(file_api_secrets_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

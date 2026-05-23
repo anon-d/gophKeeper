@@ -5,28 +5,44 @@ import (
 	"fmt"
 	"io"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/anon-d/gophKeeper/internal/server/domain"
+	"github.com/anon-d/gophKeeper/internal/server/grpc/interceptor"
 	pb "github.com/anon-d/gophKeeper/pkg/proto/api"
 )
 
+// SecretsService — интерфейс сервиса секретов.
 type SecretsService interface {
-	ListSecrets(ctx context.Context) ([]*domain.Secret, error)
+	ListSecrets(ctx context.Context, userID string) ([]*domain.Secret, error)
 	CreateSecret(ctx context.Context, secret *domain.Secret) error
-	GetSecret(ctx context.Context, id string) (*domain.Secret, error)
-	GetSecretPayload(ctx context.Context, id string) (*domain.Secret, io.ReadCloser, error)
+	GetSecret(ctx context.Context, id, userID string) (*domain.Secret, error)
+	GetSecretPayload(ctx context.Context, id, userID string) (*domain.Secret, io.ReadCloser, error)
 	CreateSecretStream(ctx context.Context, secret *domain.Secret, reader io.Reader) error
-	DeleteSecret(ctx context.Context, id string) error
+	UpdateSecret(ctx context.Context, secret *domain.Secret) (int, error)
+	DeleteSecret(ctx context.Context, id, userID string) error
 }
 
+// SecretServer — gRPC-сервер секретов.
 type SecretServer struct {
 	pb.UnimplementedSecretsServiceServer
 	secretsService SecretsService
 }
 
+// NewSecretServer создаёт новый SecretServer.
+func NewSecretServer(secretsService SecretsService) *SecretServer {
+	return &SecretServer{secretsService: secretsService}
+}
+
 func (s *SecretServer) ListSecrets(ctx context.Context, req *emptypb.Empty) (*pb.ListSecretResponse, error) {
-	secrets, err := s.secretsService.ListSecrets(ctx)
+	userID, err := interceptor.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secrets, err := s.secretsService.ListSecrets(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +54,13 @@ func (s *SecretServer) ListSecrets(ctx context.Context, req *emptypb.Empty) (*pb
 }
 
 func (s *SecretServer) CreateSecret(ctx context.Context, req *pb.CreateSecretRequest) (*pb.CreateSecretResponse, error) {
-	err := s.secretsService.CreateSecret(ctx, secretConverterToDomain(req.GetSecret()))
+	userID, err := interceptor.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secret := secretConverterToDomain(req.GetSecret())
+	secret.UserID = userID
+	err = s.secretsService.CreateSecret(ctx, secret)
 	if err != nil {
 		return &pb.CreateSecretResponse{Status: "error"}, err
 	}
@@ -62,7 +84,12 @@ func (s *SecretServer) CreateSecretStream(stream pb.SecretsService_CreateSecretS
 		return fmt.Errorf("first chunk must contain metadata")
 	}
 
+	userID, err := interceptor.UserIDFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
 	secret := secretConverterToDomain(first.GetMeta())
+	secret.UserID = userID
 
 	// 2. Создаём pipe: всё что пишем в writer — читается из reader
 	pr, pw := io.Pipe()
@@ -104,7 +131,11 @@ func (s *SecretServer) CreateSecretStream(stream pb.SecretsService_CreateSecretS
 }
 
 func (s *SecretServer) GetSecret(ctx context.Context, req *pb.GetSecretRequest) (*pb.GetSecretResponse, error) {
-	secret, err := s.secretsService.GetSecret(ctx, req.GetSecretId())
+	userID, err := interceptor.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secret, err := s.secretsService.GetSecret(ctx, req.GetSecretId(), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +151,13 @@ func (s *SecretServer) GetSecret(ctx context.Context, req *pb.GetSecretRequest) 
 func (s *SecretServer) GetSecretStream(req *pb.GetSecretRequest, stream pb.SecretsService_GetSecretStreamServer) error {
 	const chunkSize = 64 * 1024 // 64 KB
 
+	userID, err := interceptor.UserIDFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
+
 	// 1. Получаем метаданные и reader для payload
-	secret, reader, err := s.secretsService.GetSecretPayload(stream.Context(), req.GetSecretId())
+	secret, reader, err := s.secretsService.GetSecretPayload(stream.Context(), req.GetSecretId(), userID)
 	if err != nil {
 		return err
 	}
@@ -154,8 +190,28 @@ func (s *SecretServer) GetSecretStream(req *pb.GetSecretRequest, stream pb.Secre
 	}
 }
 
+// UpdateSecret обновляет секрет с оптимистичной блокировкой.
+func (s *SecretServer) UpdateSecret(ctx context.Context, req *pb.UpdateSecretRequest) (*pb.UpdateSecretResponse, error) {
+	userID, err := interceptor.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secret := secretConverterToDomain(req.GetSecret())
+	secret.UserID = userID
+
+	newVersion, err := s.secretsService.UpdateSecret(ctx, secret)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "конфликт версий: %v", err)
+	}
+	return &pb.UpdateSecretResponse{NewVersion: int64(newVersion)}, nil
+}
+
 func (s *SecretServer) DeleteSecret(ctx context.Context, req *pb.DeleteSecretRequest) (*pb.DeleteSecretResponse, error) {
-	err := s.secretsService.DeleteSecret(ctx, req.GetSecretId())
+	userID, err := interceptor.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = s.secretsService.DeleteSecret(ctx, req.GetSecretId(), userID)
 	if err != nil {
 		return &pb.DeleteSecretResponse{Status: "error"}, err
 	}
@@ -163,9 +219,25 @@ func (s *SecretServer) DeleteSecret(ctx context.Context, req *pb.DeleteSecretReq
 }
 
 func secretConverterToPB(secret *domain.Secret) *pb.Secret {
-	return nil
+	return &pb.Secret{
+		Id:        secret.ID,
+		Type:      pb.SecretType(secret.Type),
+		Title:     secret.Title,
+		Payload:   secret.Payload,
+		Metadata:  secret.Metadata,
+		Version:   int64(secret.Version),
+		CreatedAt: timestamppb.New(secret.CreatedAt),
+		UpdatedAt: timestamppb.New(secret.UpdatedAt),
+	}
 }
 
 func secretConverterToDomain(secret *pb.Secret) *domain.Secret {
-	return nil
+	return &domain.Secret{
+		ID:       secret.GetId(),
+		Type:     domain.SecretType(secret.GetType()),
+		Title:    secret.GetTitle(),
+		Payload:  secret.GetPayload(),
+		Metadata: secret.GetMetadata(),
+		Version:  int(secret.GetVersion()),
+	}
 }

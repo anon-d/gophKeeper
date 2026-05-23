@@ -22,11 +22,13 @@ type User struct {
 
 type Secret struct {
 	ID        string
-	Type      SecretType `json:"type"`
-	Title     string     `json:"title"`
-	Payload   []byte     `json:"payload"`
+	UserID    string
+	Type      SecretType
+	Title     string
+	Payload   []byte
 	Metadata  string
+	Ref       string // ссылка на объект в MinIO (для BINARY)
 	Version   int
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

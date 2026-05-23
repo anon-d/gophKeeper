@@ -133,6 +133,40 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	return i, err
 }
 
+const updateSecret = `-- name: UpdateSecret :one
+UPDATE secrets
+SET title = $3, metadata = $4, payload = $5, ref = $6,
+    version = version + 1, updated_at = now()
+WHERE id = $1 AND user_id = $2 AND version = $7
+RETURNING version
+`
+
+type UpdateSecretParams struct {
+	ID       pgtype.UUID
+	UserID   pgtype.UUID
+	Title    string
+	Metadata pgtype.Text
+	Payload  []byte
+	Ref      pgtype.Text
+	Version  int32
+}
+
+// Обновление секрета с оптимистичной блокировкой
+func (q *Queries) UpdateSecret(ctx context.Context, arg UpdateSecretParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updateSecret,
+		arg.ID,
+		arg.UserID,
+		arg.Title,
+		arg.Metadata,
+		arg.Payload,
+		arg.Ref,
+		arg.Version,
+	)
+	var version int32
+	err := row.Scan(&version)
+	return version, err
+}
+
 const listSecrets = `-- name: ListSecrets :many
 SELECT id, type, title, version, created_at, updated_at
 FROM secrets

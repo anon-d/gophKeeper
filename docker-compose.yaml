@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: keeper
+      POSTGRES_PASSWORD: keeper
+      POSTGRES_DB: keeper
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keeper -d keeper"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  migrator:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_DSN: "postgres://keeper:keeper@postgres:5432/keeper?sslmode=disable"
+      MIGRATIONS_PATH: "file:///migrations"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  server:
+    build:
+      context: .
+      target: server
+    environment:
+      DATABASE_DSN: "postgres://keeper:keeper@postgres:5432/keeper?sslmode=disable"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+      JWT_SECRET: "super-secret-key-change-me"
+      GRPC_ADDR: ":44044"
+    ports:
+      - "44044:44044"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  minio_data:

@@ -6,33 +6,52 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/anon-d/gophKeeper/internal/server/grpc/interceptor"
 	"github.com/anon-d/gophKeeper/internal/server/grpc/servers"
 	pb "github.com/anon-d/gophKeeper/pkg/proto/api"
 )
 
+// GRPCServer — gRPC-сервер приложения.
 type GRPCServer struct {
 	server *grpc.Server
 	logger *slog.Logger
+	addr   string
 }
 
-func NewGRPCServer(logger *slog.Logger) (*GRPCServer, error) {
-	srv := grpc.NewServer()
-	pb.RegisterAuthServiceServer(srv, &servers.UserServer{})
-	pb.RegisterSecretsServiceServer(srv, &servers.SecretServer{})
+// NewGRPCServer создаёт gRPC-сервер с инжектированными зависимостями.
+func NewGRPCServer(
+	logger *slog.Logger,
+	addr string,
+	authService servers.AuthService,
+	secretsService servers.SecretsService,
+	tokenParser interceptor.TokenParser,
+) *GRPCServer {
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.AuthInterceptor(tokenParser)),
+		grpc.StreamInterceptor(interceptor.StreamAuthInterceptor(tokenParser)),
+	)
+
+	pb.RegisterAuthServiceServer(srv, servers.NewUserServer(authService))
+	pb.RegisterSecretsServiceServer(srv, servers.NewSecretServer(secretsService))
 
 	return &GRPCServer{
 		server: srv,
 		logger: logger,
-	}, nil
+		addr:   addr,
+	}
 }
 
+// Run запускает gRPC-сервер.
 func (g *GRPCServer) Run() error {
-	l, err := net.Listen("tcp", "44044")
+	l, err := net.Listen("tcp", g.addr)
 	if err != nil {
 		return err
 	}
-	if err := g.server.Serve(l); err != nil {
-		return err
-	}
-	return nil
+	g.logger.Info("gRPC server started", "addr", g.addr)
+	return g.server.Serve(l)
+}
+
+// Stop останавливает gRPC-сервер.
+func (g *GRPCServer) Stop() {
+	g.server.GracefulStop()
 }
