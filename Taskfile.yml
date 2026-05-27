@@ -1,0 +1,121 @@
+version: '3'
+
+vars:
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+  BUILD_DATE:
+    sh: date -u +%Y-%m-%dT%H:%M:%S
+  LDFLAGS: -X main.version={{.VERSION}} -X main.buildDate={{.BUILD_DATE}}
+
+tasks:
+
+  # --- Docker ---
+
+  up:
+    desc: Запустить сервер + postgres + minio
+    cmds:
+      - docker compose up --build -d
+
+  down:
+    desc: Остановить всё
+    cmds:
+      - docker compose down
+
+  logs:
+    desc: Логи сервера
+    cmds:
+      - docker compose logs -f server
+
+  restart:
+    desc: Пересобрать и перезапустить сервер
+    cmds:
+      - docker compose up --build -d server
+
+  # --- Client ---
+
+  build-client:
+    desc: Собрать клиент (текущая платформа)
+    cmds:
+      - go build -ldflags "{{.LDFLAGS}}" -o bin/keeper-client ./cmd/client
+
+  build-client-linux:
+    desc: Собрать клиент для Linux (amd64)
+    cmds:
+      - GOOS=linux GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o bin/keeper-client-linux-amd64 ./cmd/client
+
+  build-client-windows:
+    desc: Собрать клиент для Windows (amd64)
+    cmds:
+      - GOOS=windows GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o bin/keeper-client-windows-amd64.exe ./cmd/client
+
+  build-client-darwin-amd64:
+    desc: Собрать клиент для macOS (Intel)
+    cmds:
+      - GOOS=darwin GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o bin/keeper-client-darwin-amd64 ./cmd/client
+
+  build-client-darwin-arm64:
+    desc: Собрать клиент для macOS (Apple Silicon)
+    cmds:
+      - GOOS=darwin GOARCH=arm64 go build -ldflags "{{.LDFLAGS}}" -o bin/keeper-client-darwin-arm64 ./cmd/client
+
+  build-client-all:
+    desc: Собрать клиент для всех платформ
+    deps:
+      - build-client-linux
+      - build-client-windows
+      - build-client-darwin-amd64
+      - build-client-darwin-arm64
+
+  run-client:
+    desc: Собрать и запустить клиент
+    deps: [build-client]
+    cmds:
+      - ./bin/keeper-client
+
+  # --- Server (локально) ---
+
+  build-server:
+    desc: Собрать сервер
+    cmds:
+      - go build -o bin/keeper-server ./cmd/server
+
+  build-migrator:
+    desc: Собрать мигратор
+    cmds:
+      - go build -o bin/migrator ./cmd/migrator
+
+  migrate:
+    desc: Применить миграции (локальная БД)
+    deps: [build-migrator]
+    cmds:
+      - ./bin/migrator
+
+  # --- Proto ---
+
+  generate:
+    desc: Генерация proto
+    cmds:
+      - easyp mod download
+      - easyp generate
+
+  lint-proto:
+    desc: Линтинг proto
+    cmds:
+      - easyp lint
+
+  # --- Go ---
+
+  tidy:
+    desc: go mod tidy
+    cmds:
+      - go mod tidy
+
+  test:
+    desc: Запустить тесты
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Линтинг Go
+    cmds:
+      - golangci-lint run ./...

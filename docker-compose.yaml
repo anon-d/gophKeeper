@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  migrator:
+    build:
+      context: .
+      target: migrator
+    environment:
+      DATABASE_DSN: ${DATABASE_DSN}
+      MIGRATIONS_PATH: ${MIGRATIONS_PATH}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  server:
+    build:
+      context: .
+      target: server
+    environment:
+      DATABASE_DSN: ${DATABASE_DSN}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      GRPC_ADDR: ${GRPC_ADDR}
+    ports:
+      - "${GRPC_PORT}:44044"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  minio_data:
