@@ -8,11 +8,13 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+
+	"github.com/anon-d/gophKeeper/internal/config"
 )
 
 func main() {
-	dsn := envOrDefault("DATABASE_DSN", "postgres://keeper:keeper@localhost:5432/keeper?sslmode=disable")
-	migrationsPath := envOrDefault("MIGRATIONS_PATH", "file://migrations")
+	dsn := config.EnvOrDefault("DATABASE_DSN", "postgres://keeper:keeper@localhost:5432/keeper?sslmode=disable")
+	migrationsPath := config.EnvOrDefault("MIGRATIONS_PATH", "file://migrations")
 
 	m, err := migrate.New(migrationsPath, dsn)
 	if err != nil {
@@ -29,9 +31,3 @@ func main() {
 	fmt.Println("migrations applied successfully")
 }
 
-func envOrDefault(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
-}

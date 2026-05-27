@@ -12,6 +12,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
+	"github.com/anon-d/gophKeeper/internal/config"
 	grpcServer "github.com/anon-d/gophKeeper/internal/server/grpc"
 	minioRepo "github.com/anon-d/gophKeeper/internal/server/repository/minio"
 	pgRepo "github.com/anon-d/gophKeeper/internal/server/repository/postgres"
@@ -25,7 +26,7 @@ func main() {
 	defer cancel()
 
 	// --- PostgreSQL ---
-	dbDSN := envOrDefault("DATABASE_DSN", "postgres://keeper:keeper@localhost:5432/keeper?sslmode=disable")
+	dbDSN := config.EnvOrDefault("DATABASE_DSN", "postgres://keeper:keeper@localhost:5432/keeper?sslmode=disable")
 	pool, err := pgxpool.New(ctx, dbDSN)
 	if err != nil {
 		logger.Error("failed to connect to postgres", "error", err)
@@ -35,9 +36,9 @@ func main() {
 	pgRepository := pgRepo.New(pool)
 
 	// --- MinIO ---
-	minioEndpoint := envOrDefault("MINIO_ENDPOINT", "localhost:9000")
+	minioEndpoint := config.EnvOrDefault("MINIO_ENDPOINT", "localhost:9000")
 	minioClient, err := minio.New(minioEndpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(envOrDefault("MINIO_ACCESS_KEY", "minioadmin"), envOrDefault("MINIO_SECRET_KEY", "minioadmin"), ""),
+		Creds:  credentials.NewStaticV4(config.EnvOrDefault("MINIO_ACCESS_KEY", "minioadmin"), config.EnvOrDefault("MINIO_SECRET_KEY", "minioadmin"), ""),
 		Secure: false,
 	})
 	if err != nil {
@@ -51,12 +52,12 @@ func main() {
 	}
 
 	// --- Services ---
-	jwtSecret := envOrDefault("JWT_SECRET", "super-secret-key")
+	jwtSecret := config.EnvOrDefault("JWT_SECRET", "super-secret-key")
 	authSvc := service.NewAuthService(pgRepository, jwtSecret, 24*time.Hour)
 	secretSvc := service.NewSecretService(pgRepository, minioRepository)
 
 	// --- gRPC ---
-	addr := envOrDefault("GRPC_ADDR", ":44044")
+	addr := config.EnvOrDefault("GRPC_ADDR", ":44044")
 	srv := grpcServer.NewGRPCServer(logger, addr, authSvc, secretSvc, authSvc)
 
 	// --- Graceful shutdown ---
@@ -76,9 +77,3 @@ func main() {
 	logger.Info("server stopped")
 }
 
-func envOrDefault(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
-}

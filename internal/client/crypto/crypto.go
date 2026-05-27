@@ -112,3 +112,14 @@ func DecryptWithPassword(masterPassword string, data []byte) ([]byte, error) {
 	key := DeriveKey(masterPassword, salt)
 	return Decrypt(key, encrypted)
 }
+
+// authSalt — фиксированный salt для хеширования пароля аутентификации.
+// Используется для детерминированного вывода — одинаковый пароль всегда даёт одинаковый хеш.
+var authSalt = []byte("gophkeeper-auth0")
+
+// HashPassword хеширует пароль через Argon2id с фиксированным salt.
+// Результат детерминирован: один и тот же пароль → один и тот же хеш (необходимо для сравнения на сервере).
+func HashPassword(password string) string {
+	key := DeriveKey(password, authSalt)
+	return fmt.Sprintf("%x", key)
+}

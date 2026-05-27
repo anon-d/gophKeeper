@@ -2,7 +2,6 @@ package tui
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -129,7 +128,7 @@ func (m loginModel) submit() tea.Cmd {
 		}
 	}
 
-	passHash := hashPassword(password)
+	passHash := crypto.HashPassword(password)
 	vault := m.vault
 
 	return func() tea.Msg {
@@ -148,7 +147,3 @@ func (m loginModel) submit() tea.Cmd {
 	}
 }
 
-func hashPassword(password string) string {
-	h := sha256.Sum256([]byte(password))
-	return fmt.Sprintf("%x", h)
-}

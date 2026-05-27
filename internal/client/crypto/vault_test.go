@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -49,24 +50,25 @@ func TestVaultIsAvailable(t *testing.T) {
 }
 
 func TestVaultRefresh(t *testing.T) {
-	v := NewVault()
-	v.Store("pass")
+	synctest.Test(t, func(t *testing.T) {
+		v := NewVault()
+		v.Store("pass")
 
-	// Запоминаем время
-	v.mu.Lock()
-	firstExpiry := v.expiresAt
-	v.mu.Unlock()
+		v.mu.Lock()
+		firstExpiry := v.expiresAt
+		v.mu.Unlock()
 
-	time.Sleep(10 * time.Millisecond)
-	v.Refresh()
+		time.Sleep(1 * time.Second)
+		v.Refresh()
 
-	v.mu.Lock()
-	secondExpiry := v.expiresAt
-	v.mu.Unlock()
+		v.mu.Lock()
+		secondExpiry := v.expiresAt
+		v.mu.Unlock()
 
-	if !secondExpiry.After(firstExpiry) {
-		t.Fatal("Refresh should extend expiry")
-	}
+		if !secondExpiry.After(firstExpiry) {
+			t.Fatal("Refresh should extend expiry")
+		}
+	})
 }
 
 func TestVaultOverwrite(t *testing.T) {

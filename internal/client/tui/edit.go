@@ -260,7 +260,7 @@ func (m editModel) submit() tea.Cmd {
 
 		newVersion, err := client.UpdateSecret(context.Background(), updated)
 		if err != nil {
-			return secretsErrMsg{fmt.Errorf("конфликт версий — обновите список и попробуйте снова")}
+			return secretsErrMsg{err}
 		}
 		return secretUpdatedMsg{newVersion: newVersion}
 	}
