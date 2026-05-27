@@ -38,10 +38,10 @@ task run-client
 
 ## Использование
 **Регистрация/авторизация**
-<video src="./assets/reg.mp4" width="600" controls autoplay muted loop></video>
+<video src="https://github.com/user-attachments/assets/9d7afbe1-8273-4f87-829c-a06401515404" width="800" controls></video>
 
 **Создание секрета**
-<video src="./assets/use.mp4" width="600" controls autoplay muted loop></video>
+<video src="https://github.com/user-attachments/assets/eec78ef9-7a37-4e05-bd43-17537689923b" width="800" controls></video>
 
 ## Конфигурирование
 Для конфигурирования переменных окружения используйте файл `.env`. Пример файла `.env` можно найти в `.env.example`.
